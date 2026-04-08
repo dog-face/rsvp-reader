@@ -6,11 +6,7 @@ allowed-tools: Write, Bash
 
 # Flash
 
-Pops open a new Terminal.app window that flashes text one word at a time (RSVP / Spritz-style, with the ORP letter in red) using the `rsvp-term.py` script at `${CLAUDE_PLUGIN_ROOT}/data/rsvp-term.py`.
-
-This is the terminal counterpart to `/speed`:
-- `/speed` opens the browser-based fullscreen reader.
-- `/flash` opens a **new Terminal.app window** that flashes the same content inline in a real TTY.
+Pops open a new Terminal.app window that flashes text one word at a time (RSVP / Spritz-style, with the ORP letter in red) using the `rsvp-term.py` script at `${CLAUDE_PLUGIN_ROOT}/data/rsvp-term.py`. The window is opened with a 48pt font so the flashing words are large and easy to read, and the script itself runs a 3-second countdown at the ORP column before starting so the reader's eyes have time to fixate on the focal point.
 
 ## Instructions
 
@@ -26,16 +22,18 @@ This is the terminal counterpart to `/speed`:
 3. **Write to the scratch file:**
    - Write the cleaned text to `/tmp/claude-flash.txt`, overwriting any previous run. Use the Write tool directly (no need to Read it first — overwriting is the intent).
 
-4. **Launch a new Terminal.app window:**
-   - Run this Bash command. The `${CLAUDE_PLUGIN_ROOT}` variable is expanded by the current shell (where Claude Code sets it) **before** `osascript` ever sees it, so the resolved absolute path is what gets passed into the Terminal window's shell:
+4. **Launch a new Terminal.app window with a big font:**
+   - Run this Bash command. `${CLAUDE_PLUGIN_ROOT}` is expanded by the current shell (where Claude Code sets it) **before** `osascript` sees it, so the resolved absolute path is what ends up in the Terminal window's shell. The third `-e` sets the window's font size to 48pt after `do script` creates it — targeting `window 1` works because `do script` makes its new window frontmost.
      ```bash
      osascript \
        -e "tell application \"Terminal\" to do script \"python3 ${CLAUDE_PLUGIN_ROOT}/data/rsvp-term.py --wpm 600 < /tmp/claude-flash.txt\"" \
-       -e 'tell application "Terminal" to activate'
+       -e 'tell application "Terminal" to activate' \
+       -e 'tell application "Terminal" to set font size of window 1 to 48'
      ```
 
 5. **Confirm to the user:** Tell them a new Terminal window is popping up. Mention:
-   - Default speed is **600 WPM**.
+   - A **3-second countdown** (3, 2, 1) appears at the ORP column before words start, so they have time to find the focal point with their eyes.
+   - Default speed is **600 WPM**, default font size is **48pt**.
    - Inside the new window: **Space** to pause, **q** or **Ctrl+C** to quit.
    - The window will stay open after `[done — N words @ 600 wpm]` so they can read the footer.
 

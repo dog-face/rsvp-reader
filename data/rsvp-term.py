@@ -153,7 +153,7 @@ class KeyListener:
 
 # ---------- main flash loop ----------
 
-def flash(words, wpm, orp_col):
+def flash(words, wpm, orp_col, countdown_seconds=3):
     base = 60.0 / wpm
     paused = False
     keys = KeyListener()
@@ -166,6 +166,14 @@ def flash(words, wpm, orp_col):
     sys.stdout.write(CLEAR_SCREEN + HIDE_CURSOR)
     sys.stdout.flush()
     try:
+        # Countdown: show N, N-1, ..., 1 at the exact ORP column so the
+        # reader's eyes have time to fixate on the spot where words will
+        # appear. The digits use render_word() so they share the ORP anchor
+        # with the real words that follow.
+        for n in range(countdown_seconds, 0, -1):
+            sys.stdout.write(goto_mid + render_word(str(n), orp_col))
+            sys.stdout.flush()
+            time.sleep(1)
         i = 0
         while i < len(words):
             key = keys.poll()
@@ -205,6 +213,8 @@ def main():
                     help="words per minute (default: 600)")
     ap.add_argument("-c", "--col", type=int, default=None,
                     help="column for the ORP letter (default: terminal width / 2)")
+    ap.add_argument("--countdown", type=int, default=3, metavar="N",
+                    help="countdown seconds before flashing starts (default: 3, 0 to skip)")
     args = ap.parse_args()
 
     if args.text is not None:
@@ -229,7 +239,7 @@ def main():
         except Exception:
             pass
 
-    flash(words, args.wpm, orp_col)
+    flash(words, args.wpm, orp_col, args.countdown)
 
 
 if __name__ == "__main__":
