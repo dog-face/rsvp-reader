@@ -23,17 +23,18 @@ Pops open a new Terminal.app window that flashes text one word at a time (RSVP /
    - Write the cleaned text to `/tmp/claude-flash.txt`, overwriting any previous run. Use the Write tool directly (no need to Read it first — overwriting is the intent).
 
 4. **Launch a new Terminal.app window with a big font:**
-   - Run this Bash command. `${CLAUDE_PLUGIN_ROOT}` is expanded by the current shell (where Claude Code sets it) **before** `osascript` sees it, so the resolved absolute path is what ends up in the Terminal window's shell. The third `-e` sets the window's font size to 48pt after `do script` creates it — targeting `window 1` works because `do script` makes its new window frontmost.
+   - Run this Bash command verbatim. `${CLAUDE_PLUGIN_ROOT}` is expanded by the current shell (where Claude Code sets it) **before** `osascript` sees it, so the resolved absolute path is what ends up in the Terminal window's shell. `${RSVP_FONT_SIZE:-36}` reads the user's preferred font size from their shell environment (set via `export RSVP_FONT_SIZE=42` in `~/.zshrc` or equivalent) and falls back to **36pt** if unset. The third `-e` sets that font size on the new window after `do script` creates it — targeting `window 1` works because `do script` makes its new window frontmost.
      ```bash
+     FONT_SIZE=${RSVP_FONT_SIZE:-36}
      osascript \
        -e "tell application \"Terminal\" to do script \"python3 ${CLAUDE_PLUGIN_ROOT}/data/rsvp-term.py --wpm 600 < /tmp/claude-flash.txt\"" \
        -e 'tell application "Terminal" to activate' \
-       -e 'tell application "Terminal" to set font size of window 1 to 36'
+       -e "tell application \"Terminal\" to set font size of window 1 to $FONT_SIZE"
      ```
 
 5. **Confirm to the user:** Tell them a new Terminal window is popping up. Mention:
    - A **3-second countdown** (3, 2, 1) appears at the ORP column before words start, so they have time to find the focal point with their eyes.
-   - Default speed is **600 WPM**, default font size is **36pt**.
+   - Default speed is **600 WPM**. Default font size is **36pt**, overridable via the `RSVP_FONT_SIZE` environment variable (set in the user's shell config).
    - Inside the new window: **Space** to pause, **q** or **Ctrl+C** to quit.
    - The window will stay open after `[done — N words @ 600 wpm]` so they can read the footer.
 

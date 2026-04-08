@@ -109,6 +109,25 @@ hey claude, explain what a git rebase is /flash
 
 Claude will reply in-chat as usual *and* pop a Terminal window flashing the reply. This is a behavioral convention Claude honors via a saved feedback memory, not a Claude Code slash-command parser feature. Ask Claude to set it up for you, or look at `commands/flash.md` in this repo and save an equivalent memory yourself.
 
+## Configuration
+
+The `/flash` command reads one environment variable:
+
+| Variable | Default | Description |
+|---|---|---|
+| `RSVP_FONT_SIZE` | `36` | Font size (pt) for the Terminal.app window `/flash` opens. Tune to taste. |
+
+Set it in your shell config so Claude Code inherits it when you launch the CLI:
+
+```bash
+# ~/.zshrc (or ~/.bashrc)
+export RSVP_FONT_SIZE=42
+```
+
+Then restart Claude Code so the new env is picked up by the Bash tool. `/flash` will use the new size on the next invocation.
+
+This only affects `/flash` (the new-window path). The standalone `rsvp` CLI runs in whatever terminal you're already using and inherits its font size — if you want bigger text there, change your terminal profile.
+
 ## How it works
 
 RSVP (Rapid Serial Visual Presentation) is a speed-reading technique where words are flashed sequentially at a single fixed location so the reader doesn't need saccades — the tiny eye movements that normally consume ~80% of reading time. By pinning every word's **Optimal Recognition Point** (the letter your brain anchors on to recognize the word, located roughly 1/3 of the way in depending on length) to a fixed screen column, your eye never has to move at all.
