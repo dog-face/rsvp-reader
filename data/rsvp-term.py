@@ -171,7 +171,7 @@ def _wait_for_key(keys, timeout_s):
         time.sleep(0.02)
 
 
-def _render(word_or_digit, index, total, orp_col, paused):
+def _render(word_or_digit, position, total, orp_col, paused):
     """Redraw the full frame: word at middle row, progress bar + hints near bottom.
 
     Re-queries terminal size on every call so the layout adapts to font-size
@@ -190,11 +190,13 @@ def _render(word_or_digit, index, total, orp_col, paused):
     pause_suffix = "   [paused]" if paused else ""
     mid_content = render_word(word_or_digit, orp_col) + pause_suffix
 
-    # Progress bar — filled/empty block chars + word count
+    # Progress bar — filled/empty block chars + word count, stretches the
+    # full width of the terminal (minus space for the count label)
     if total > 0:
-        count_str = f"{index}/{total}"
-        bar_width = max(10, min(40, cols - len(count_str) - 4))
-        filled = min(bar_width, int((index / total) * bar_width))
+        count_str = f"{position}/{total}"
+        # Reserve columns for:  "  " (2) + count_str + " " (1) trailing margin
+        bar_width = max(10, cols - len(count_str) - 3)
+        filled = min(bar_width, int((position / total) * bar_width))
         bar = "█" * filled + "░" * (bar_width - filled)
         progress_line = f"{bar}  {count_str}"
     else:

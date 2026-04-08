@@ -6,7 +6,7 @@ allowed-tools: Write, Bash
 
 # Flash
 
-Pops open a new Terminal.app window that flashes text one word at a time (RSVP / Spritz-style, with the ORP letter in red) using the `rsvp-term.py` script at `${CLAUDE_PLUGIN_ROOT}/data/rsvp-term.py`. The window is opened with a 48pt font so the flashing words are large and easy to read, and the script itself runs a 3-second countdown at the ORP column before starting so the reader's eyes have time to fixate on the focal point.
+Pops open a new Terminal.app window that flashes text one word at a time (RSVP / Spritz-style, with the ORP letter in red) using the `rsvp-term.py` script at `${CLAUDE_PLUGIN_ROOT}/data/rsvp-term.py`. The window is opened with a 36pt font so the flashing words are large and easy to read, and the script itself runs a 3-second countdown at the ORP column before starting so the reader's eyes have time to fixate on the focal point.
 
 ## Instructions
 
@@ -28,12 +28,12 @@ Pops open a new Terminal.app window that flashes text one word at a time (RSVP /
      osascript \
        -e "tell application \"Terminal\" to do script \"python3 ${CLAUDE_PLUGIN_ROOT}/data/rsvp-term.py --wpm 600 < /tmp/claude-flash.txt\"" \
        -e 'tell application "Terminal" to activate' \
-       -e 'tell application "Terminal" to set font size of window 1 to 48'
+       -e 'tell application "Terminal" to set font size of window 1 to 36'
      ```
 
 5. **Confirm to the user:** Tell them a new Terminal window is popping up. Mention:
    - A **3-second countdown** (3, 2, 1) appears at the ORP column before words start, so they have time to find the focal point with their eyes.
-   - Default speed is **600 WPM**, default font size is **48pt**.
+   - Default speed is **600 WPM**, default font size is **36pt**.
    - Inside the new window: **Space** to pause, **q** or **Ctrl+C** to quit.
    - The window will stay open after `[done — N words @ 600 wpm]` so they can read the footer.
 
