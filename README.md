@@ -27,7 +27,21 @@ Two ways to use this:
 
 ### As a Claude Code plugin
 
-_Not yet published to a marketplace._ For now, clone this repo and point Claude Code at it as a local plugin source. See the [Claude Code plugin docs](https://docs.claude.com/en/docs/claude-code) for the install flow on your version.
+The repo itself acts as a single-plugin marketplace. From any shell:
+
+```bash
+claude plugin marketplace add dog-face/rsvp-reader
+claude plugin install rsvp-reader
+```
+
+That's it. `/flash` will be available in your next Claude Code session (or immediately if the current session hot-loads newly installed plugins).
+
+To update later when this repo changes:
+
+```bash
+claude plugin marketplace update rsvp-reader
+claude plugin update rsvp-reader
+```
 
 ### As a standalone `rsvp` CLI
 
