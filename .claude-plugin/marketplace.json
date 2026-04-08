@@ -11,8 +11,8 @@
       "name": "rsvp-reader",
       "description": "Terminal-native RSVP/Spritz speed reader. Provides /flash to pop a Terminal.app window flashing Claude's response at 600 WPM with Spritz-style ORP highlighting, plus a standalone rsvp CLI that works from any shell.",
       "source": {
-        "source": "github",
-        "repo": "dog-face/rsvp-reader"
+        "source": "url",
+        "url": "https://github.com/dog-face/rsvp-reader.git"
       },
       "category": "productivity",
       "homepage": "https://github.com/dog-face/rsvp-reader"
