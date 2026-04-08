@@ -153,51 +153,123 @@ class KeyListener:
 
 # ---------- main flash loop ----------
 
+HINTS_TEXT = "space pause  ·  b back  ·  q quit"
+
+
+def _wait_for_key(keys, timeout_s):
+    """Poll for a keypress, returning the key char or None on timeout.
+    If timeout_s is None, waits indefinitely. Poll interval is 20ms, so
+    key presses are noticed within ~20ms instead of at the end of a
+    blocking sleep — critical for space/b to feel responsive."""
+    deadline = None if timeout_s is None else time.monotonic() + timeout_s
+    while True:
+        key = keys.poll()
+        if key is not None:
+            return key
+        if deadline is not None and time.monotonic() >= deadline:
+            return None
+        time.sleep(0.02)
+
+
+def _render(word_or_digit, index, total, orp_col, paused):
+    """Redraw the full frame: word at middle row, progress bar + hints near bottom.
+
+    Re-queries terminal size on every call so the layout adapts to font-size
+    changes that happen mid-session — e.g. /flash bumps the Terminal.app window
+    to 48pt *after* rsvp-term.py has started, which shrinks the row count from
+    under the script's feet. Without re-querying, the bar and hints would end
+    up off-screen.
+    """
+    sz = shutil.get_terminal_size((80, 24))
+    rows, cols = sz.lines, sz.columns
+    mid_row = max(1, rows // 2)
+    bar_row = max(mid_row + 2, rows - 2)
+    hints_row = max(bar_row + 1, rows - 1)
+
+    # Middle row — word with optional [paused] suffix
+    pause_suffix = "   [paused]" if paused else ""
+    mid_content = render_word(word_or_digit, orp_col) + pause_suffix
+
+    # Progress bar — filled/empty block chars + word count
+    if total > 0:
+        count_str = f"{index}/{total}"
+        bar_width = max(10, min(40, cols - len(count_str) - 4))
+        filled = min(bar_width, int((index / total) * bar_width))
+        bar = "█" * filled + "░" * (bar_width - filled)
+        progress_line = f"{bar}  {count_str}"
+    else:
+        progress_line = ""
+
+    # Dimmed hints row (ANSI 2 = faint)
+    hints_line = "\033[2m" + HINTS_TEXT + "\033[0m"
+
+    out = (
+        f"\033[{mid_row};1H\033[2K" + mid_content +
+        f"\033[{bar_row};1H\033[2K" + progress_line +
+        f"\033[{hints_row};1H\033[2K" + hints_line
+    )
+    sys.stdout.write(out)
+    sys.stdout.flush()
+
+
 def flash(words, wpm, orp_col, countdown_seconds=3):
     base = 60.0 / wpm
     paused = False
+    total = len(words)
     keys = KeyListener()
-    size = shutil.get_terminal_size((80, 24))
-    mid_row = max(1, size.lines // 2)
-    # Move cursor to middle row, col 1, then clear that line — used for every frame
-    goto_mid = f"\033[{mid_row};1H\033[2K"
-    # After exit, drop to the last row so the shell prompt reappears below the flashed area
-    goto_bottom = f"\033[{size.lines};1H\n"
     sys.stdout.write(CLEAR_SCREEN + HIDE_CURSOR)
     sys.stdout.flush()
+    quit_early = False
     try:
-        # Countdown: show N, N-1, ..., 1 at the exact ORP column so the
-        # reader's eyes have time to fixate on the spot where words will
-        # appear. The digits use render_word() so they share the ORP anchor
-        # with the real words that follow.
+        # Countdown: big digits at the ORP column, one per second, so the
+        # reader's eyes can fixate on the focal spot before the words begin.
+        # Uses _render so the progress bar and hints are already visible
+        # underneath the countdown — readers can orient to the full layout.
         for n in range(countdown_seconds, 0, -1):
-            sys.stdout.write(goto_mid + render_word(str(n), orp_col))
-            sys.stdout.flush()
+            _render(str(n), 0, total, orp_col, False)
             time.sleep(1)
+
+        # Main word loop — non-blocking, driven by _wait_for_key so key
+        # presses are noticed within ~20ms instead of only at word boundaries.
         i = 0
-        while i < len(words):
-            key = keys.poll()
+        while 0 <= i < total:
+            # position = i + 1 so the bar + count read as "word X of N"
+            # (the user thinks of the first word as 1/N, not 0/N)
+            _render(words[i], i + 1, total, orp_col, paused)
+            timeout = None if paused else timing(words[i], base)
+            key = _wait_for_key(keys, timeout)
             if key == ' ':
                 paused = not paused
-                if paused:
-                    sys.stdout.write(
-                        goto_mid + render_word(words[i], orp_col) + "   [paused]"
-                    )
-                    sys.stdout.flush()
-                # fall through to loop; either sleeps briefly or resumes flashing
+            elif key in ('b', 'B'):
+                # Back one word AND pause, so the reader can re-read it at leisure
+                i = max(0, i - 1)
+                paused = True
             elif key in ('q', 'Q', '\x03'):
+                quit_early = True
                 break
-            if paused:
-                time.sleep(0.05)
-                continue
-            w = words[i]
-            sys.stdout.write(goto_mid + render_word(w, orp_col))
-            sys.stdout.flush()
-            time.sleep(timing(w, base))
-            i += 1
-        sys.stdout.write(goto_mid + f"[done — {len(words)} words @ {wpm} wpm]" + goto_bottom)
+            elif key is None:
+                # Timeout: advance to the next word
+                i += 1
+            # any other key: ignore and redraw (no state change)
+
+        # Exit message — clear screen, center the footer, cursor to bottom row
+        sz = shutil.get_terminal_size((80, 24))
+        footer = (
+            f"[quit at {i + 1}/{total}]" if quit_early
+            else f"[done — {total} words @ {wpm} wpm]"
+        )
+        sys.stdout.write(
+            CLEAR_SCREEN +
+            f"\033[{max(1, sz.lines // 2)};1H" + footer +
+            f"\033[{sz.lines};1H\n"
+        )
     except KeyboardInterrupt:
-        sys.stdout.write(goto_mid + "[interrupted]" + goto_bottom)
+        sz = shutil.get_terminal_size((80, 24))
+        sys.stdout.write(
+            CLEAR_SCREEN +
+            f"\033[{max(1, sz.lines // 2)};1H[interrupted]" +
+            f"\033[{sz.lines};1H\n"
+        )
     finally:
         sys.stdout.write(SHOW_CURSOR)
         sys.stdout.flush()
