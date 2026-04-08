@@ -1,0 +1,21 @@
+{
+  "name": "rsvp-reader",
+  "metadata": {
+    "description": "Single-plugin marketplace for rsvp-reader — a terminal-native RSVP/Spritz speed reader for Claude Code."
+  },
+  "owner": {
+    "name": "dog-face"
+  },
+  "plugins": [
+    {
+      "name": "rsvp-reader",
+      "description": "Terminal-native RSVP/Spritz speed reader. Provides /flash to pop a Terminal.app window flashing Claude's response at 600 WPM with Spritz-style ORP highlighting, plus a standalone rsvp CLI that works from any shell.",
+      "source": {
+        "source": "github",
+        "repo": "dog-face/rsvp-reader"
+      },
+      "category": "productivity",
+      "homepage": "https://github.com/dog-face/rsvp-reader"
+    }
+  ]
+}
