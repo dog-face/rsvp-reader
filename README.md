@@ -2,6 +2,8 @@
 
 A Claude Code plugin (and standalone CLI) that flashes text one word at a time in a terminal using **Rapid Serial Visual Presentation (RSVP)** — Spritz-style, with the **Optimal Recognition Point (ORP)** letter drawn in red at a fixed column. Read Claude's responses at 600+ WPM without leaving your shell.
 
+![demo](demo.gif)
+
 ## What it does
 
 Claude produces a lot of words. RSVP lets you consume them faster by eliminating saccades: words flash at a fixed terminal position with the ORP letter anchored to a fixed column, so your eyes never have to move.
