@@ -1,6 +1,6 @@
 {
   "name": "rsvp-reader",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Terminal-native RSVP (Spritz-style) speed reader. Ships a /flash Claude Code slash command that pops a Terminal.app window flashing Claude's response at 600 WPM, and a standalone `rsvp` CLI that works the same way from any shell. Pure Python 3 stdlib, no dependencies.",
   "author": {
     "name": "dog-face"
